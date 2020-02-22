@@ -2,12 +2,17 @@
 
 '''
 #-------------------------------------------------------------------
-Simple script to calculate the Medulung potential
+Simple script to calculate the Madelung potential
 Author: Asif Iqbal
 Created on: 17/02/2020
-USAGE: python3 argv.sys[0] It will read the POSCAR automatically.
-NB: NO warranty guarranteed whatsoever even implied. This script is written
+USAGE: python3 sys.argv[0] It will read the POSCAR automatically.
+NB: NO warranty guarranteed whatsoever even implied. The script is written
 to read POSCAR file and compute the Madelung potential. 
+---
+This is a simple script which assumes the charge with atomic charge on the atom.
+In real case it can be approximated with charge obtained form DFT code such as
+Mulliken charge or Bader charge. The charge can be appended to the last line in the
+POSCAR file.
 #-------------------------------------------------------------------
 '''
 
@@ -25,8 +30,7 @@ print('Reading POSCAR ... \n')
 #-------------------------------------------------------------------
 # 													Defining atomic numbers 
 #-------------------------------------------------------------------
-# the chemical symbol of elements in the periodic table, extracted from VESTA
-# configuration file.
+# the chemical symbol of elements in the periodic table, extracted from VESTA configuration file.
 atomic_name = [
     "H" , "D", "He" , "Li", "Be", "B" , "C" , "N" , "O" , "F" , "Ne", "Na", "Mg", "Al",
     "Si", "P" , "S" , "Cl", "Ar", "K" , "Ca", "Sc", "Ti", "V" , "Cr", "Mn", "Fe", "Co",
@@ -37,8 +41,7 @@ atomic_name = [
     "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U" ,
     "Np", "Pu", "Am", "XX"
 ]
-# the atomic number of elements in the periodic table, extracted from VESTA
-# configuration file.
+# the atomic number of elements in the periodic table, extracted from VESTA configuration file.
 atomic_number = [
     1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
@@ -64,8 +67,8 @@ atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.30
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
 
 x = []; y =[]; z =[]; 
-rx=[]; ry =[]; rz=[]; at_nu={}
-r=[]; dict={}; temp=0 ; charge=[]
+rx= []; ry =[]; rz=[]; at_nu={}
+r = []; dict={}; temp=0 ; charge=[]
 
 f = open('POSCAR','r')
 lines_poscar = f.readlines()
@@ -91,7 +94,7 @@ for j in range(len(atoms_types)):
 print (at_nu)
 
 #-------------------------Multiplying the list with atomic numbers 
-# according to the POSCAR list format
+#                           according to the POSCAR list format
 
 for i in range( len(atoms_types) ):
 	for k in range( int(atom_list[i]) ):
