@@ -2,30 +2,35 @@
 
 '''
 #-------------------------------------------------------------------
-Simple script to calculate the Madelung potential
-Author: Asif Iqbal
-Created on: 17/02/2020
-USAGE: python3 sys.argv[0] It will read the POSCAR automatically.
-NB: NO warranty guarranteed whatsoever even implied. The script is written
-to read POSCAR file and compute the Madelung potential. 
+Simple script to calculate the Madelung potential (MP)
+
+Author			: Asif Iqbal
+Created on	: 01/03/2020
+
+USAGE				: python3 argv.sys[0] It will read the CONTCAR automatically.
+NB: NO warranty guarranteed whatsoever or even implied. The script reads
+CONTCAR file and compute the Madelung potential. It is better to read the final
+position after relaxation and associated charges.
 ---
-This is a simple script which assumes the charge with atomic charge on the atom.
-In real case it can be approximated with charge obtained form DFT code such as
-Mulliken charge or Bader charge. The charge can be appended to the last line in the
-POSCAR file.
+This is a simple script which assumes the charges with atomic charges on the atom.
+In real case it can be approximated with charges obtained from DFT code such as
+Mulliken charge or Bader charge analysis. 
+The charges can be appended to the last line in the CONTCAR file and the script 
+can be modified to read the charges on each atom and calculate the MP.
 #-------------------------------------------------------------------
 '''
 
 import sys, os
 import numpy as np	
+import click
 
 e = 1.60217662E10-19 # C
 d = 1.11265E10-10 # 4πϵo  is 1.11265x10-10 C2/(J m).
-	
-if not os.path.exists('POSCAR'):
-	print (' ERROR: POSCAR does not exist')
+
+if not os.path.exists('CONTCAR'):
+	print (' ERROR: CONTCAR does not exist')
 	sys.exit(0)
-print('Reading POSCAR ... \n')
+print('Reading CONTCAR ... \n')
 
 #-------------------------------------------------------------------
 # 													Defining atomic numbers 
@@ -66,20 +71,28 @@ atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.30
 'Ar': 39.948, 'Au': 196.97, 'At': 210.0, 'Ga': 69.72, 'Hs': 227.0, 'Cs': 132.91, 
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
 
-x = []; y =[]; z =[]; 
-rx= []; ry =[]; rz=[]; at_nu={}
-r = []; dict={}; temp=0 ; charge=[]
+def process_calc(fn):
+    from time import sleep
+    sleep(1)
+		
+x = []; y =[]; z =[]; rx= []; ry =[]; rz=[];
+at_nu={} ; r = []; dict={}; temp=0 ; charge=[]
 
-f = open('POSCAR','r')
-lines_poscar = f.readlines()
+f = open('CONTCAR','r')
+lines_contcar = f.readlines()
 f.close()
 
-atoms_types = lines_poscar[5].split()
-atom_list = lines_poscar[6].split()  ### reading 7th lines for reading # of atoms
+#--------------------- Reading atom types and # of elements ---------------------
+atoms_types = lines_contcar[5].split()
+atom_list = lines_contcar[6].split()  ### reading 7th lines for reading # of atoms
+print ( atoms_types[:],"-->", atom_list[:] )
+
+#--------------------- Summing atom numbers ---------------------
 sum_atoms = atom_list
-print("Atom Numbers:")
+print("Atomic Numbers/Charges of:")
 for i in range( len(atoms_types) ):
 	dict[i] = atoms_types[i],sum_atoms[i]
+	
 sum_atoms = [int(i) for i in sum_atoms]
 sum_atoms = sum(sum_atoms)
 
@@ -91,7 +104,7 @@ for j in range(len(atoms_types)):
 			element = atomic_name.index(k)
 			at_nu[j] = dict[j][0],atomic_number[element]
 			print(dict[j][0],"-->",atomic_number[element])
-print (at_nu)
+print ("Charge Dictionary ->", at_nu)
 
 #-------------------------Multiplying the list with atomic numbers 
 #                           according to the POSCAR list format
@@ -99,33 +112,38 @@ print (at_nu)
 for i in range( len(atoms_types) ):
 	for k in range( int(atom_list[i]) ):
 		charge.append(at_nu[i][1])
-print(charge)
+print("Charge Multiplicity ->",charge)
 
 #-------------------------------------------------------------------------
 
-for i in lines_poscar:
+for i in lines_contcar:
 	if "Direct" in i:
-		lp=lines_poscar.index(i)
+		lp=lines_contcar.index(i)
 
 print("-"*80)		
 for i in range(sum_atoms):
-	x, y, z = lines_poscar[lp+1+i].split()
-	print (x, y, z)
+	x, y, z = lines_contcar[lp+1+i].split()
+	# for debugging ONLY
+	#print (x, y, z) 
 	x = float(x); y = float(y); z = float(z)
 	rx.append(x);	ry.append(y);	rz.append(z)
 	##r = [rx, ry, rz]
 	
 #r = np.matrix(r)	
 print("-"*80)
+
 for i in range(sum_atoms):
 	for j in range(sum_atoms):
 		if (j > i):  # over here avoiding double counting
 			
-			temp = temp + charge[j] * 1/( np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2 ) )
+			temp = temp + ( charge[j] * 1/( np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + 
+			(rz[i]-rz[j])**2 ) ) )
 	break
+	
 Medulung = temp * (e/d)
 
-print(Medulung) 
+
+print("Medulung Potential is: {}".format(Medulung) ) 
 
 
 
