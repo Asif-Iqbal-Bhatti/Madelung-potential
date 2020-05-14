@@ -5,9 +5,9 @@
 Simple script to calculate the Madelung potential (MP)
 
 Author  : Asif Iqbal
-Created on  : 01/03/2020
+Created on  : 14/05/2020
 
-USAGE   : python3 argv.sys[0] It will read the CONTCAR automatically.
+USAGE : python3 argv.sys[0] It will read the CONTCAR automatically.
 NB: NO warranty guarranteed whatsoever or even implied. The script reads
 CONTCAR file and compute the Madelung potential. It is better to read the final
 position after relaxation and associated charges.
@@ -54,8 +54,16 @@ atomic_number = [
     38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
     56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91,
-    92, 93, 94, 95, 96,]
+    92, 93, 94, 95, 96]
 
+atomic_charge = [
+    1, 1, 1, 2, -3, 4, -3, -2, -1, 0, 1, 2, 3, 4, 5, -2, -1, 0, 1, 2,
+    3, 4, 2, 2, 2, 2, 2, 2, 2, 1, 2, 3, -4, -3, -2, -1, 0, 1,
+    1, 2, 3, 4, 3, 3, 6, 3, 4, 2, 1, 2, 3, 2, 3, 2, -3, -2,
+    -1, 0, +1, +2, +3, 3, +3, 3, +3, 3, 3, +3, 3, 3, 3, 3, 4, 5,
+    6, +3, 3, 3, 2, 1, 1, 1, 2, 3, 2, 0, 0, 0, 2, 3, 4, 5,
+    +3, 0, 0, 0, 0]
+		
 atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.305, 
 'Na': 22.99, 'Nb': 92.906, 'Db': 268.0, 'Ne': 20.179, 'Li': 6.941, 'Pb': 207.2, 
 'Re': 128.207, 'Tl': 204.37, 'B': 10.81, 'Ra': 226.03, 'Rb': 85.468, 'Ti': 47.9, 
@@ -72,7 +80,7 @@ atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.30
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
 
 	
-x = []; y =[]; z =[]; rx= []; ry =[]; rz=[];
+x = []; y =[]; z =[]; rx= []; ry =[]; rz=[]; C=[]
 at_nu={} ; r = []; dict={}; temp=0 ; charge=[]
 
 #--------------- Reading atom types and # of elements ---------------------
@@ -99,7 +107,7 @@ for j in range(len(atoms_types)):
 print ("Charge Dictionary ->")
 print (at_nu)
 
-#-------------------------Multiplying the list with atomic numbers 
+#-------------------- Multiplying the list with atomic numbers 
 #                           according to the POSCAR list format
 for i in range( len(atoms_types) ):
 	for k in range( int(atom_list[i]) ):
@@ -108,26 +116,27 @@ for i in range( len(atoms_types) ):
 
 #-------------------------------------------------------------------------
 for i in lines_contcar:
-	if "Direct" in i:
-		lp=lines_contcar.index(i)
+	if ("Direct" or "direct") in i:
+		lp = lines_contcar.index(i)
+		print (lp)			
 
 print("-"*80)		
 for i in range(sum_atoms):
-	x, y, z = lines_contcar[lp+1+i].split()
+	x, y, z, q = lines_contcar[lp+1+i].split()
 	# for debugging ONLY
 	#print (x, y, z) 
-	x = float(x); y = float(y); z = float(z)
-	rx.append(x);	ry.append(y);	rz.append(z)
+	x = float(x); y = float(y); z = float(z); q = float(q)
+	rx.append(x);	ry.append(y);	rz.append(z); C.append(q)
 	##r = [rx, ry, rz]
 	
 #r = np.matrix(r)	
 print("-"*80)
-
+print (C)
 for i in range(sum_atoms):
 	for j in range(sum_atoms):
 		if (j > i):  # over here avoiding double counting
 			r = (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2
-			temp = temp + ( charge[j] * 1/(np.sqrt( r )) )
+			temp = temp + ( C[j]/(np.sqrt( r )) )
 	break
 	
 Medulung = temp * (e/d)
