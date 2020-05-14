@@ -4,17 +4,16 @@
 #-------------------------------------------------------------------
 Simple script to calculate the Madelung potential (MP)
 
-Author			: Asif Iqbal
-Created on	: 01/03/2020
+Author  : Asif Iqbal
+Created on  : 01/03/2020
 
-USAGE				: python3 argv.sys[0] It will read the CONTCAR automatically.
+USAGE   : python3 argv.sys[0] It will read the CONTCAR automatically.
 NB: NO warranty guarranteed whatsoever or even implied. The script reads
 CONTCAR file and compute the Madelung potential. It is better to read the final
 position after relaxation and associated charges.
 ---
-This is a simple script which assumes the charges with atomic charges on the atom.
-In real case it can be approximated with charges obtained from DFT code such as
-Mulliken charge or Bader charge analysis. 
+This is a simple script which assumes the charges on the atom with atomic charges.
+In real case it should be approximated with Mulliken charge or Bader charge analysis. 
 The charges can be appended to the last line in the CONTCAR file and the script 
 can be modified to read the charges on each atom and calculate the MP.
 #-------------------------------------------------------------------
@@ -31,6 +30,9 @@ if not os.path.exists('CONTCAR'):
 	print (' ERROR: CONTCAR does not exist')
 	sys.exit(0)
 print('Reading CONTCAR ... \n')
+f = open('CONTCAR','r')
+lines_contcar = f.readlines()
+f.close()
 
 #-------------------------------------------------------------------
 # 													Defining atomic numbers 
@@ -44,8 +46,7 @@ atomic_name = [
     "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy",
     "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W" , "Re", "Os", "Ir", "Pt", "Au",
     "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U" ,
-    "Np", "Pu", "Am", "XX"
-]
+    "Np", "Pu", "Am", "XX"]
 # the atomic number of elements in the periodic table, extracted from VESTA configuration file.
 atomic_number = [
     1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
@@ -53,8 +54,7 @@ atomic_number = [
     38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
     56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91,
-    92, 93, 94, 95, 96,
-]
+    92, 93, 94, 95, 96,]
 
 atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.305, 
 'Na': 22.99, 'Nb': 92.906, 'Db': 268.0, 'Ne': 20.179, 'Li': 6.941, 'Pb': 207.2, 
@@ -71,18 +71,11 @@ atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.30
 'Ar': 39.948, 'Au': 196.97, 'At': 210.0, 'Ga': 69.72, 'Hs': 227.0, 'Cs': 132.91, 
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
 
-def process_calc(fn):
-    from time import sleep
-    sleep(1)
-		
+	
 x = []; y =[]; z =[]; rx= []; ry =[]; rz=[];
 at_nu={} ; r = []; dict={}; temp=0 ; charge=[]
 
-f = open('CONTCAR','r')
-lines_contcar = f.readlines()
-f.close()
-
-#--------------------- Reading atom types and # of elements ---------------------
+#--------------- Reading atom types and # of elements ---------------------
 atoms_types = lines_contcar[5].split()
 atom_list = lines_contcar[6].split()  ### reading 7th lines for reading # of atoms
 print ( atoms_types[:],"-->", atom_list[:] )
@@ -91,31 +84,29 @@ print ( atoms_types[:],"-->", atom_list[:] )
 sum_atoms = atom_list
 print("Atomic Numbers/Charges of:")
 for i in range( len(atoms_types) ):
-	dict[i] = atoms_types[i],sum_atoms[i]
-	
+	dict[i] = atoms_types[i], sum_atoms[i]
+
 sum_atoms = [int(i) for i in sum_atoms]
 sum_atoms = sum(sum_atoms)
 
 #--------------------- Finding atomic number from a list ---------------------
-
 for j in range(len(atoms_types)):
 	for k in atomic_name: 
 		if dict[j][0] == k:
 			element = atomic_name.index(k)
 			at_nu[j] = dict[j][0],atomic_number[element]
 			print(dict[j][0],"-->",atomic_number[element])
-print ("Charge Dictionary ->", at_nu)
+print ("Charge Dictionary ->")
+print (at_nu)
 
 #-------------------------Multiplying the list with atomic numbers 
 #                           according to the POSCAR list format
-
 for i in range( len(atoms_types) ):
 	for k in range( int(atom_list[i]) ):
 		charge.append(at_nu[i][1])
-print("Charge Multiplicity ->",charge)
+#print("Charge Multiplicity ->",charge)
 
 #-------------------------------------------------------------------------
-
 for i in lines_contcar:
 	if "Direct" in i:
 		lp=lines_contcar.index(i)
@@ -135,9 +126,8 @@ print("-"*80)
 for i in range(sum_atoms):
 	for j in range(sum_atoms):
 		if (j > i):  # over here avoiding double counting
-			
-			temp = temp + ( charge[j] * 1/( np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + 
-			(rz[i]-rz[j])**2 ) ) )
+			r = (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2
+			temp = temp + ( charge[j] * 1/(np.sqrt( r )) )
 	break
 	
 Medulung = temp * (e/d)
