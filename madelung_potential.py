@@ -19,9 +19,10 @@
 #-------------------------------------------------------------------
 '''
 
+
+
 import sys, os
-import numpy as np	
-import click
+import numpy as np
 
 e = 1.60217662E10-19 # C
 d = 1.11265E10-10 # 4πϵo  is 1.11265x10-10 C2/(J m).
@@ -30,10 +31,8 @@ if not os.path.exists('CONTCAR'):
 	print (' ERROR: CONTCAR does not exist')
 	sys.exit(0)
 print('Reading CONTCAR ... \n')
-f = open('CONTCAR','r')
-lines_contcar = f.readlines()
-f.close()
-
+with open('CONTCAR','r') as f:
+	lines_contcar = f.readlines()
 #-------------------------------------------------------------------
 # 													Defining atomic numbers 
 #-------------------------------------------------------------------
@@ -63,7 +62,7 @@ atomic_charge = [
     -1, 0, +1, +2, +3, 3, +3, 3, +3, 3, 3, +3, 3, 3, 3, 3, 4, 5,
     6, +3, 3, 3, 2, 1, 1, 1, 2, 3, 2, 0, 0, 0, 2, 3, 4, 5,
     +3, 0, 0, 0, 0]
-		
+
 atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.305, 
 'Na': 22.99, 'Nb': 92.906, 'Db': 268.0, 'Ne': 20.179, 'Li': 6.941, 'Pb': 207.2, 
 'Re': 128.207, 'Tl': 204.37, 'B': 10.81, 'Ra': 226.03, 'Rb': 85.468, 'Ti': 47.9, 
@@ -79,9 +78,19 @@ atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.30
 'Ar': 39.948, 'Au': 196.97, 'At': 210.0, 'Ga': 69.72, 'Hs': 227.0, 'Cs': 132.91, 
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
 
-	
-x = []; y =[]; z =[]; rx= []; ry =[]; rz=[]; C=[]
-at_nu={} ; r = []; dict={}; temp=0 ; charge=[]
+
+x = []
+y =[]
+z =[]
+rx= []
+ry =[]
+rz=[]
+C=[]
+at_nu={}
+r = []
+dict={}
+temp=0
+charge=[]
 
 #--------------- Reading atom types and # of elements ---------------------
 atoms_types = lines_contcar[5].split()
@@ -110,8 +119,7 @@ print (at_nu)
 #-------------------- Multiplying the list with atomic numbers 
 #                 according to the POSCAR list format
 for i in range( len(atoms_types) ):
-	for k in range( int(atom_list[i]) ):
-		charge.append(at_nu[i][1])
+	charge.extend(at_nu[i][1] for _ in range( int(atom_list[i]) ))
 #print("Charge Multiplicity ->",charge)
 
 #-------------------------------------------------------------------------
@@ -120,7 +128,7 @@ for i in lines_contcar:
 		lp = lines_contcar.index(i)
 		print (lp)			
 
-print("-"*80)		
+print("-"*80)
 for i in range(sum_atoms):
 	x, y, z, q = lines_contcar[lp+1+i].split()
 	# for debugging ONLY
@@ -128,7 +136,7 @@ for i in range(sum_atoms):
 	x = float(x); y = float(y); z = float(z); q = float(q)
 	rx.append(x);	ry.append(y);	rz.append(z); C.append(q)
 	##r = [rx, ry, rz]
-	
+
 #r = np.matrix(r)	
 print("-"*80)
 print (C)
@@ -138,14 +146,7 @@ for i in range(sum_atoms):
 			r = (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2
 			temp = temp + ( C[j]/(np.sqrt( r )) )
 	break
-	
+
 Medulung = temp * (e/d)
 
-
 print("Medulung Potential is: {}".format(Medulung) ) 
-
-
-
-
-
-
