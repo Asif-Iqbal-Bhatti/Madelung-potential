@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 '''
-#-------------------------------------------------------------------
+#=======================================================================
 #Simple script to calculate the Madelung potential (MP)
 #
 #Author      : Asif Iqbal -> @AIB_EM
@@ -16,10 +16,8 @@
 #In real case it should be approximated with Mulliken charge or Bader charge analysis. 
 #The charges can be appended to the last line in the CONTCAR file and the script 
 #can be modified to read the charges on each atom and calculate the MP.
-#-------------------------------------------------------------------
+#=======================================================================
 '''
-
-
 
 import sys, os
 import numpy as np
@@ -33,10 +31,12 @@ if not os.path.exists('CONTCAR'):
 print('Reading CONTCAR ... \n')
 with open('CONTCAR','r') as f:
 	lines_contcar = f.readlines()
+	
 #-------------------------------------------------------------------
-# 													Defining atomic numbers 
+# 									Defining atomic numbers 
 #-------------------------------------------------------------------
-# the chemical symbol of elements in the periodic table, extracted from VESTA configuration file.
+# THE CHEMICAL SYMBOL OF ELEMENTS IN THE PERIODIC TABLE, 
+# EXTRACTED FROM VESTA CONFIGURATION FILE.
 atomic_name = [
     "H" , "D", "He" , "Li", "Be", "B" , "C" , "N" , "O" , "F" , "Ne", "Na", "Mg", "Al",
     "Si", "P" , "S" , "Cl", "Ar", "K" , "Ca", "Sc", "Ti", "V" , "Cr", "Mn", "Fe", "Co",
@@ -46,7 +46,7 @@ atomic_name = [
     "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W" , "Re", "Os", "Ir", "Pt", "Au",
     "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U" ,
     "Np", "Pu", "Am", "XX"]
-# the atomic number of elements in the periodic table, extracted from VESTA configuration file.
+
 atomic_number = [
     1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
@@ -63,7 +63,8 @@ atomic_charge = [
     6, +3, 3, 3, 2, 1, 1, 1, 2, 3, 2, 0, 0, 0, 2, 3, 4, 5,
     +3, 0, 0, 0, 0]
 
-atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.305, 
+atomic_mass = {
+'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.305, 
 'Na': 22.99, 'Nb': 92.906, 'Db': 268.0, 'Ne': 20.179, 'Li': 6.941, 'Pb': 207.2, 
 'Re': 128.207, 'Tl': 204.37, 'B': 10.81, 'Ra': 226.03, 'Rb': 85.468, 'Ti': 47.9, 
 'Rn': 222.0, 'Cd': 112.41, 'Po': 209.0, 'Ta': 180.95, 'Be': 9.0122, 'Fr': 223.0, 
@@ -78,75 +79,60 @@ atomic_mass = {'Ru': 102.91, 'Pd': 106.4, 'Pt': 195.09, 'Ni': 58.71, 'Mg': 24.30
 'Ar': 39.948, 'Au': 196.97, 'At': 210.0, 'Ga': 69.72, 'Hs': 227.0, 'Cs': 132.91, 
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
 
-
-x = []
-y =[]
-z =[]
-rx= []
-ry =[]
-rz=[]
-C=[]
-at_nu={}
-r = []
-dict={}
 temp=0
-charge=[]
+dict, at_nu = {}, {}
+rx, ry, rz = [], [], []
+qq, r, charge = [], [], []
 
-#--------------- Reading atom types and # of elements ---------------------
+#============== READING ATOM TYPES AND # OF ELEMENTS
 atoms_types = lines_contcar[5].split()
-atom_list = lines_contcar[6].split()  ### reading 7th lines for reading # of atoms
-print ( atoms_types[:],"-->", atom_list[:] )
+atom_list = lines_contcar[6].split()
+tot = zip(atoms_types, atom_list)
+print(f'# OF ATOMS, {list(tot)}')
 
-#--------------------- Summing atom numbers ---------------------
+#============== SUMMING ATOM NUMBERS
 sum_atoms = atom_list
-print("Atomic Numbers/Charges of:")
 for i in range( len(atoms_types) ):
 	dict[i] = atoms_types[i], sum_atoms[i]
+sum_atoms = sum(list(map(int, sum_atoms)))
+print(f'TOTAL # OF ATOMS {sum_atoms}')
 
-sum_atoms = [int(i) for i in sum_atoms]
-sum_atoms = sum(sum_atoms)
-
-#--------------------- Finding atomic number from a list ---------------------
+#============== FINDING ATOMIC NUMBER FROM A LIST &
+# MULTIPLYING THE LIST WITH ATOMIC NUMBERS 
+# ACCORDING TO THE POSCAR LIST FORMAT
 for j in range(len(atoms_types)):
 	for k in atomic_name: 
 		if dict[j][0] == k:
 			element = atomic_name.index(k)
-			at_nu[j] = dict[j][0],atomic_number[element]
-			print(dict[j][0],"-->",atomic_number[element])
-print ("Charge Dictionary ->")
-print (at_nu)
+			at_nu[j] = dict[j][0], atomic_number[element]
+			#print(dict[j][0],"-->", atomic_number[element])
+#print (f'Charge Dictionary -> {at_nu}')
 
-#-------------------- Multiplying the list with atomic numbers 
-#                 according to the POSCAR list format
 for i in range( len(atoms_types) ):
 	charge.extend(at_nu[i][1] for _ in range( int(atom_list[i]) ))
 #print("Charge Multiplicity ->",charge)
 
-#-------------------------------------------------------------------------
+#============== INDEXING POSITIONS
 for i in lines_contcar:
-	if ("Direct" or "direct") in i:
+	if ("Cartesian" or "C" or "cartesian") in i:
 		lp = lines_contcar.index(i)
-		print (lp)			
 
-print("-"*80)
 for i in range(sum_atoms):
 	x, y, z, q = lines_contcar[lp+1+i].split()
-	# for debugging ONLY
-	#print (x, y, z) 
-	x = float(x); y = float(y); z = float(z); q = float(q)
-	rx.append(x);	ry.append(y);	rz.append(z); C.append(q)
-	##r = [rx, ry, rz]
+	rx.append(float(x))
+	ry.append(float(y))
+	rz.append(float(z))
+	qq.append(float(q))
 
-#r = np.matrix(r)	
-print("-"*80)
-print (C)
+print("="*30)
+print (f'CHARGES IN CONTCAR FILE {qq}')
+
 for i in range(sum_atoms):
 	for j in range(sum_atoms):
-		if (j > i):  # over here avoiding double counting
-			r = (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2
-			temp = temp + ( C[j]/(np.sqrt( r )) )
-	break
-
+		if (j > i):  # AVOIDING DOUBLE COUNTING
+			r = np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2 )
+			temp += ( qq[j]/r )
+	#break
+	
 Medulung = temp * (e/d)
-
-print("Medulung Potential is: {}".format(Medulung) ) 
+print(f"Medulung Potential is: {Medulung:6.3f}" ) 
