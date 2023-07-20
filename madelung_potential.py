@@ -24,8 +24,10 @@ import numpy as np
 import warnings
 
 # Constants
-e = 1.602176634e-19  # Elementary charge (Coulombs)
-d = 1.11265e-10 # 4πϵo  is 1.11265x10-10 C2/(Jm).
+E = 1.602176634e-19  # Elementary charge (Coulombs)
+P = 1.11265e-10 # 4πϵo  is 1.11265x10-10 C**2/(Jm).
+A2M = 1e-10 # Angstrom to meter
+J2eV = 6.242e+18
 
 contcar_file = 'POSCAR'
 
@@ -141,14 +143,11 @@ temp = 0.0
 for i in range(sum_atoms):
     for j in range(sum_atoms):
         if (j > i):  # AVOIDING DOUBLE COUNTING
-            r = np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2 )
+            r = np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2 ) * A2M
             temp += ( qq[j]/r )
     break
-    
-print(temp)            
-print(temp * e/d)
-    
-Medulung = temp * (e/d)
-print(f"Medulung Potential is: {Medulung:6.3f}" )
+ 
+Medulung = temp * (E/P)
+print(f"Medulung Potential is: {Medulung:6.3f} J" )
 
 
