@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.9
 
 '''
 #=======================================================================
@@ -14,26 +14,36 @@
 #---
 #This is a simple script which assumes the charges on the atom with atomic charges.
 #In real case it should be approximated with Mulliken charge or Bader charge analysis. 
-#The charges can be appended to the last line in the CONTCAR file and the script 
+#The charges can be appended to the 4th column in the CONTCAR file and the script 
 #can be modified to read the charges on each atom and calculate the MP.
 #=======================================================================
 '''
 
 import sys, os
 import numpy as np
+import warnings
 
-e = 1.60217662E10-19 # C
-d = 1.11265E10-10 # 4πϵo  is 1.11265x10-10 C2/(J m).
+# Constants
+e = 1.602176634e-19  # Elementary charge (Coulombs)
+d = 1.11265e-10 # 4πϵo  is 1.11265x10-10 C2/(Jm).
 
-if not os.path.exists('CONTCAR'):
-	print (' ERROR: CONTCAR does not exist')
-	sys.exit(0)
-print('Reading CONTCAR ... \n')
-with open('CONTCAR','r') as f:
-	lines_contcar = f.readlines()
-	
+contcar_file = 'POSCAR'
+
+if not os.path.exists(contcar_file):
+    print('ERROR: CONTCAR does not exist')
+    sys.exit(1)
+
+print('Reading CONTCAR ...\n')
+with open(contcar_file, 'r') as f:
+    lines_contcar = f.readlines()
+
+for line in lines_contcar:
+    if line.strip().lower() in ["direct", "d"]:
+        warnings.warn('The file should be in Cartesian coordinates. Convert to Cartesian before proceeding.')
+        sys.exit(1)
+        
 #-------------------------------------------------------------------
-# 									Defining atomic numbers 
+#                       Defining atomic numbers 
 #-------------------------------------------------------------------
 # THE CHEMICAL SYMBOL OF ELEMENTS IN THE PERIODIC TABLE, 
 # EXTRACTED FROM VESTA CONFIGURATION FILE.
@@ -78,61 +88,67 @@ atomic_mass = {
 'k': 39.096, 'Ir': 192.22, 'S': 32.06, 'Xe': 131.3, 'Mn': 54.938, 'As': 74.922, 
 'Ar': 39.948, 'Au': 196.97, 'At': 210.0, 'Ga': 69.72, 'Hs': 227.0, 'Cs': 132.91, 
 'Cr': 51.996, 'Ca': 40.08, 'Cu': 63.546, 'In': 114.82}
+#-------------------------------------------------------------------
 
-temp=0
 dict, at_nu = {}, {}
 rx, ry, rz = [], [], []
 qq, r, charge = [], [], []
 
 #============== READING ATOM TYPES AND # OF ELEMENTS
-atoms_types = lines_contcar[5].split()
-atom_list = lines_contcar[6].split()
-tot = zip(atoms_types, atom_list)
-print(f'# OF ATOMS, {list(tot)}')
+atoms_types, atom_list = lines_contcar[5].split(), lines_contcar[6].split()
+output = f"{'ATOMS TYPE':30s}: {list(zip(atoms_types, atom_list))}"
+print(output)
 
-#============== SUMMING ATOM NUMBERS
+#============== 
+# SUMMING ATOM NUMBERS
+#============== 
 sum_atoms = atom_list
 for i in range( len(atoms_types) ):
-	dict[i] = atoms_types[i], sum_atoms[i]
+    dict[i] = atoms_types[i], sum_atoms[i]   
 sum_atoms = sum(list(map(int, sum_atoms)))
-print(f'TOTAL # OF ATOMS {sum_atoms}')
+print(f"{'TOTAL # OF ATOMS':30s}: {sum_atoms}")
 
-#============== FINDING ATOMIC NUMBER FROM A LIST &
+#============== 
+# FINDING ATOMIC NUMBER FROM A LIST &
 # MULTIPLYING THE LIST WITH ATOMIC NUMBERS 
 # ACCORDING TO THE POSCAR LIST FORMAT
+#============== 
+
 for j in range(len(atoms_types)):
-	for k in atomic_name: 
-		if dict[j][0] == k:
-			element = atomic_name.index(k)
-			at_nu[j] = dict[j][0], atomic_number[element]
-			#print(dict[j][0],"-->", atomic_number[element])
+    for k in atomic_name: 
+        if dict[j][0] == k:
+            element = atomic_name.index(k)
+            at_nu[j] = dict[j][0], atomic_number[element]
+            #print(dict[j][0],"-->", atomic_number[element])
 #print (f'Charge Dictionary -> {at_nu}')
 
 for i in range( len(atoms_types) ):
-	charge.extend(at_nu[i][1] for _ in range( int(atom_list[i]) ))
-#print("Charge Multiplicity ->",charge)
+    charge.extend(at_nu[i][1] for _ in range( int(atom_list[i]) ))
+print(f"{'Charge Multiplicity':30s}: {charge}")
 
 #============== INDEXING POSITIONS
 for i in lines_contcar:
-	if ("Cartesian" or "C" or "cartesian") in i:
-		lp = lines_contcar.index(i)
+    if any(s in i for s in ["Cartesian", "C", "cartesian"]):
+        lp = lines_contcar.index(i)
 
+coord_q = np.array([list(map(float, lines_contcar[lp+1+i].split())) for i in range(sum_atoms)])
+rx, ry, rz, qq = coord_q.T
+
+print(f"{'='*50:<30}")
+print(f"CHARGES IN FILE {qq}\n")
+
+temp = 0.0
 for i in range(sum_atoms):
-	x, y, z, q = lines_contcar[lp+1+i].split()
-	rx.append(float(x))
-	ry.append(float(y))
-	rz.append(float(z))
-	qq.append(float(q))
-
-print("="*30)
-print (f'CHARGES IN CONTCAR FILE {qq}')
-
-for i in range(sum_atoms):
-	for j in range(sum_atoms):
-		if (j > i):  # AVOIDING DOUBLE COUNTING
-			r = np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2 )
-			temp += ( qq[j]/r )
-	#break
-	
+    for j in range(sum_atoms):
+        if (j > i):  # AVOIDING DOUBLE COUNTING
+            r = np.sqrt( (rx[i]-rx[j])**2 + (ry[i]-ry[j])**2 + (rz[i]-rz[j])**2 )
+            temp += ( qq[j]/r )
+    break
+    
+print(temp)            
+print(temp * e/d)
+    
 Medulung = temp * (e/d)
-print(f"Medulung Potential is: {Medulung:6.3f}" ) 
+print(f"Medulung Potential is: {Medulung:6.3f}" )
+
+
