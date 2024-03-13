@@ -1,18 +1,13 @@
-# Madelung potential
-A simple script to calculate the Madelung potential (MP)
+# Madelung Potential Calculator
 
-Created on: 01/03/2020
+A Python script for computing the Madelung potential (MP).
 
-USAGE: python3 argv.sys[0] 
+Created: 01/03/2020
 
-It will read the CONTCAR automatically. Supply the partial charge to the last column of the CONTCAR file.
+Usage: python3 argv.sys[0]
 
-NB: NO warranty guaranteed whatsoever, not even implied. The script reads
-CONTCAR file and compute the Madelung potential.
-It is better to read the final position after the relaxation and associated charges.
+The script automatically reads the CONTCAR file and requires the partial charge to be provided in the last column of the CONTCAR file.
 
-This simple script assumes the charges with atomic charges on the atom.
-In real cases, it can be approximated with charges obtained from the DFT code such as
-Mulliken charge or Bader charge analysis. 
-The charges can be appended to the last column in the CONTCAR file and the script 
-can be modified to read the charges on each atom and calculate the MP.
+Disclaimer: This script comes with absolutely no warranty, neither explicit nor implied. It operates by reading the CONTCAR file and computing the Madelung potential. It is strongly recommended to utilize the final atomic positions post-relaxation, along with associated charges.
+
+This straightforward script assumes atomic charges for each atom. In practical scenarios, these charges can be approximated using charge analysis methods from DFT codes such as Mulliken charge or Bader charge analysis. By appending the charges to the last column in the CONTCAR file, the script can be adapted to read these charges for each atom and calculate the MP accordingly.
