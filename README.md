@@ -32,6 +32,7 @@ The factor of $1/2$ is included to avoid double-counting the pairwise interactio
 
 ### 3. Units and Conversions
 To provide results in standard units (**Volts** and **electron-Volts**), the script uses the following conversion:
+The conversion factor from internal units ($e/\text{\AA}$) to Volts is:
 
 $$ 1 \text{ unit} = \frac{e}{4\pi\epsilon_0 \cdot 1 \mathbf{ \AA}} \approx 14.3996 \text{ V} $$
 
