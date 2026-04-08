@@ -2,7 +2,8 @@
 
 A Python script for computing the Madelung potential (MP).
 
-Created: 01/03/2020
+Created :: 01/03/2020
+UPDATED :: 08/04/2026
 
 Usage: python3 argv.sys[0]
 
